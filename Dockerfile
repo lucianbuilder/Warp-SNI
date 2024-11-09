@@ -23,7 +23,7 @@ RUN case ${TARGETPLATFORM} in \
     curl https://pkg.cloudflareclient.com/pubkey.gpg | gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg && \
     echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/cloudflare-client.list && \
     apt-get update && \
-    apt-get install -y cloudflare-warp sniproxy && \
+    apt-get install -y cloudflare-warp sniproxy proxychains-ng && \
     apt-get clean && \
     apt-get autoremove -y && \
     chmod +x /entrypoint.sh && \
@@ -34,6 +34,7 @@ RUN case ${TARGETPLATFORM} in \
 USER warp
 
 ADD sniproxy.conf /etc/sniproxy.conf
+ADD proxychains4.conf /etc/proxychains4.conf
 
 # Accept Cloudflare WARP TOS
 RUN mkdir -p /home/warp/.local/share/warp && \
@@ -49,7 +50,8 @@ ENV REGISTER_WHEN_MDM_EXISTS=
 ENV WARP_LICENSE_KEY=
 ENV BETA_FIX_HOST_CONNECTIVITY=
 
-HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
-  CMD /healthcheck/index.sh
+#HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
+#  CMD /healthcheck/index.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
+#ENTRYPOINT ["tail", "-f", "/dev/null"]
