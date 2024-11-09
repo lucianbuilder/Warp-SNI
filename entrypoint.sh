@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # exit when any command fails
-set -e
+#set -e
 
 # create a tun device if not exist to ensure compatibility with Podman
 if [ ! -e /dev/net/tun ]; then
@@ -27,20 +27,28 @@ sleep "$WARP_SLEEP"
 if [ ! -f /var/lib/cloudflare-warp/reg.json ]; then
     # if /var/lib/cloudflare-warp/mdm.xml not exists or REGISTER_WHEN_MDM_EXISTS not empty, register the warp client
     if [ ! -f /var/lib/cloudflare-warp/mdm.xml ] || [ -n "$REGISTER_WHEN_MDM_EXISTS" ]; then
-        warp-cli registration new && echo "Warp client registered!"
+        sudo warp-cli registration new && echo "Warp client registered!"
         # if a license key is provided, register the license
         if [ -n "$WARP_LICENSE_KEY" ]; then
             echo "License key found, registering license..."
-            warp-cli registration license "$WARP_LICENSE_KEY" && echo "Warp license registered!"
+            sudo warp-cli registration license "$WARP_LICENSE_KEY" && echo "Warp license registered!"
         fi
-    warp-cli tunnel protocol set MASQUE
+    sudo warp-cli tunnel protocol set MASQUE
+    sudo warp-cli mode proxy
     fi
     # connect to the warp server
-    warp-cli --accept-tos connect
+    sudo warp-cli --accept-tos connect
 else
     echo "Warp client already registered, skip registration"
 fi
 
 # start the proxy
+#echo "Run sniproxy ..." && \
+#./sniproxy \
+#    --forward-proxy="socks5://localhost:40000" \
+#    --dns-upstream=1.1.1.1 \
+#    --dns-redirect-ipv4-to=127.0.0.1 \
+#    --verbose
 echo "Run sniproxy ..." && \
-    sniproxy -c /etc/sniproxy.conf -f
+        sudo proxychains4 sniproxy -c /etc/sniproxy.conf -f
+#       sniproxy -c /etc/sniproxytest.conf -f
